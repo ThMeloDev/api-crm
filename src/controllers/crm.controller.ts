@@ -8,13 +8,15 @@ import { CrmService } from 'src/services/crm.service';
 export class CrmController {
   constructor(private readonly crmService: CrmService) {}
 
+  @Get()
+  async findOne(@Query() params): Promise<Crm[]> {
+    return await this.crmService.findOne(params.id,params.versao);
+  }
+  
   @Get('all')
   async findAll(): Promise<Crm[]> {
     return await this.crmService.findAll();
   }
 
-  @Get()
-  async findOne(@Query() params): Promise<Crm> {
-    return await this.crmService.findOne(params.id,params.versao);
-  }
+ 
 }

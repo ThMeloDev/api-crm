@@ -1,14 +1,14 @@
 import { Controller, Get, HttpStatus, Query, Response } from '@nestjs/common';
-import { SistemasEnvolvidos } from 'src/database/entities/sistemasEnvolvidos.entity';
-import { SistemasEnvolvidosService } from 'src/services/sistemaEnvolvidos.service';
+import { SistemaEnvolvido } from 'src/database/entities/sistemaEnvolvido.entity';
+import { SistemaEnvolvidoService } from 'src/services/sistemaEnvolvido.service';
 
 
-@Controller('sistemasEnvolvidos')
-export class SistemasEnvolvidosController {
-  constructor(private readonly sistemasEnvolvidosService: SistemasEnvolvidosService) {}
+@Controller('sistemaEnvolvido')
+export class SistemaEnvolvidoController {
+  constructor(private readonly sistemaEnvolvidoService: SistemaEnvolvidoService) {}
 
   @Get('all')
-  async findDocuments(@Query() params, @Response() res: any): Promise<SistemasEnvolvidos[]> {
+  async findDocuments(@Query() params, @Response() res: any): Promise<SistemaEnvolvido[]> {
       if (params.crmId === null || params.crmId === undefined) {
           return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(
             {
@@ -27,11 +27,11 @@ export class SistemasEnvolvidosController {
             }
           )
       }
-    return res.send(await this.sistemasEnvolvidosService.findSistemas(params.crmId , params.crmVersao));
+    return res.send(await this.sistemaEnvolvidoService.findSistemas(params.crmId , params.crmVersao));
   }
 
   @Get()
-  async findOne(@Query() params, @Response() res: any): Promise<SistemasEnvolvidos> {
+  async findOne(@Query() params, @Response() res: any): Promise<SistemaEnvolvido> {
     if (params.sistemaNome === null || params.sistemaNome === undefined) {
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(
           {
@@ -59,6 +59,6 @@ export class SistemasEnvolvidosController {
           }
         )
     }
-  return res.send(await this.sistemasEnvolvidosService.findOne(params.sistemaNome,params.crmId , params.crmVersao));
+  return res.send(await this.sistemaEnvolvidoService.findOne(params.sistemaNome,params.crmId , params.crmVersao));
 }
 }

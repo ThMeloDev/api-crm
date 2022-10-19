@@ -7,9 +7,9 @@ import { CrmModule } from './modules/crm.module';
 import { DocumentoModule } from './modules/documento.module';
 import { FlagModule } from './modules/flag.module';
 import { SetorModule } from './modules/setor.module';
-import { SetoresEnvolvidosModule } from './modules/setoresEnvolvidos.module';
+import { SetorEnvolvidoModule } from './modules/setorEnvolvido.module';
 import { SistemaModule } from './modules/sistema.module';
-import { SistemaEnvolvidosModule } from './modules/sistemasEnvolvidos.module';
+import { SistemaEnvolvidoModule } from './modules/sistemaEnvolvido.module';
 
 @Module({
   imports: 
@@ -21,8 +21,8 @@ import { SistemaEnvolvidosModule } from './modules/sistemasEnvolvidos.module';
     ColaboradorModule,
     SetorModule,
     DocumentoModule,
-    SistemaEnvolvidosModule,
-    SetoresEnvolvidosModule
+    SistemaEnvolvidoModule,
+    SetorEnvolvidoModule
   ],
   controllers: [AppController],
   providers: [AppService],

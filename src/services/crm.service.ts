@@ -12,11 +12,26 @@ export class CrmService {
   ) {}
 
   async findAll(): Promise<Crm[]> {
-    return await this.crmReposity.find();
+    return await this.crmReposity.find({
+      relations: {
+        complexidade: true,
+        colaboradorCriador: {setor:true}
+      }
+    });
   }
 
-  async findOne(id: number,versao:number): Promise<Crm> {
-    return await this.crmReposity.findOneBy({ id,versao });
+  async findOne(id: number,versao:number): Promise<Crm[]> {
+    return await this.crmReposity.find({
+      where:{
+        id: id,
+        versao: versao
+      },
+      relations: {
+        complexidade: true,
+        colaboradorCriador: {setor:true},
+        setoresEnvolvidos:true
+      }
+     });
   }
   
 }

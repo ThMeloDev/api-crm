@@ -1,4 +1,7 @@
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import { Colaborador } from './colaborador.entity';
+import { Complexidade } from './complexidade.entity';
+import { SetorEnvolvido } from './setorEnvolvido.entity';
 
 @Entity()
 export class Crm {
@@ -47,9 +50,14 @@ export class Crm {
   @Column({type:'text', name:'motivoatualizado', nullable:true})
   motivoAtualizacao: string | null;
 
-  @Column({type:'varchar',length:10, name:'colaborador_matricula_criador'})
-  colaboradorCriador: string;
+  @ManyToOne(() => Colaborador,(colaborador) => colaborador.crms)
+  @JoinColumn({name:'colaborador_matricula_criador', referencedColumnName:'matricula'})
+  colaboradorCriador: Colaborador;
 
-  @Column({type:'varchar',length:45, name:'complexidade_nome', nullable:true})
-  complexidade: string | null;
+  @ManyToOne(() => Complexidade,(complexidade) => complexidade.crms)
+  @JoinColumn({name:'complexidade_nome', referencedColumnName:'nome'})
+  complexidade: Complexidade;
+
+  @OneToMany(() => SetorEnvolvido, (setorEnvolvido) => setorEnvolvido.crm)
+  setoresEnvolvidos: SetorEnvolvido[];
 }

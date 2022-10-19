@@ -1,18 +1,18 @@
 import { Controller, Get, HttpStatus, Query, Response } from '@nestjs/common';
-import { SetoresEnvolvidos } from 'src/database/entities/setoresEnvolvidos.entity';
-import { SetoresEnvolvidosService } from 'src/services/setoresEnvolvidos.service';
+import { SetorEnvolvido } from 'src/database/entities/setorEnvolvido.entity';
+import { SetorEnvolvidoService } from 'src/services/setorEnvolvido.service';
 
-@Controller('setoresEnvolvidos')
-export class setoresEnvolvidosController {
+@Controller('setorEnvolvido')
+export class SetorEnvolvidoController {
   constructor(
-    private readonly setoresEnvolvidosService: SetoresEnvolvidosService,
+    private readonly setorEnvolvidoService: SetorEnvolvidoService,
   ) {}
 
   @Get('all')
   async findDocuments(
     @Query() params,
     @Response() res: any,
-  ): Promise<SetoresEnvolvidos[]> {
+  ): Promise<SetorEnvolvido[]> {
     if (params.crmId === null || params.crmId === undefined) {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
         statusCode: 500,
@@ -28,7 +28,7 @@ export class setoresEnvolvidosController {
       });
     }
     return res.send(
-      await this.setoresEnvolvidosService.findSetores(
+      await this.setorEnvolvidoService.findSetores(
         params.crmId,
         params.crmVersao,
       ),
@@ -39,7 +39,7 @@ export class setoresEnvolvidosController {
   async findOne(
     @Query() params,
     @Response() res: any,
-  ): Promise<SetoresEnvolvidos> {
+  ): Promise<SetorEnvolvido> {
     if (params.setorNome === null || params.setorNome === undefined) {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
         statusCode: 500,
@@ -62,7 +62,7 @@ export class setoresEnvolvidosController {
       });
     }
     return res.send(
-      await this.setoresEnvolvidosService.findOne(
+      await this.setorEnvolvidoService.findOne(
         params.sistemaNome,
         params.crmId,
         params.crmVersao,

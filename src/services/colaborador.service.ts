@@ -11,11 +11,22 @@ export class ColaboradorService {
   ) {}
 
   async findAll(): Promise<Colaborador[]> {
-    return await this.colaboradorReposity.find();
+    return await this.colaboradorReposity.find({
+      relations:{
+        setor:true
+      }
+    });
   }
 
-  async findOne(matricula: string): Promise<Colaborador> {
-    return await this.colaboradorReposity.findOneBy({ matricula });
+  async findOne(matricula: string): Promise<Colaborador[]> {
+    return await this.colaboradorReposity.find({
+      where:{
+        matricula:matricula
+      },
+      relations: {
+        setor:true
+      }
+    });
   }
   
 }

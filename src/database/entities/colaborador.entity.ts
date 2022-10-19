@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn } from 'typeorm';
+import { Crm } from './crm.entity';
+import { Setor } from './setor.entity';
 
 @Entity()
 export class Colaborador {
@@ -23,6 +25,10 @@ export class Colaborador {
   @Column({ type: 'varchar', length: 20, name: 'senha' })
   senha: string;
 
-  @Column({ type: 'varchar', length: 40, name: 'setor_nome' })
-  nomeDoSetor: string;
+  @ManyToOne(() => Setor, (setor) => setor.colaboradores)
+  @JoinColumn({ name: 'setor_nome', referencedColumnName: 'nome' })
+  setor: Setor;
+
+  @OneToMany(() => Crm, (crm) => crm.colaboradorCriador)
+  crms: Crm[];
 }

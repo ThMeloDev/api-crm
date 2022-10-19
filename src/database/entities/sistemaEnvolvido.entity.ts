@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn } from 'typeorm';
 
 @Entity()
-export class SistemasEnvolvidos {
+export class SistemaEnvolvido {
   @PrimaryColumn({ type: 'varchar', length: 30, name: 'sistema_nome' })
   sistemaNome: string;
 
