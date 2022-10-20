@@ -29,7 +29,9 @@ export class CrmService {
       relations: {
         complexidade: true,
         colaboradorCriador: {setor:true},
-        setoresEnvolvidos:true
+        setoresEnvolvidos:true,
+        sistemasEnvolvidos:true,
+        documentos: true
       }
      });
   }

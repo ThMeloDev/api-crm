@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { SistemaEnvolvido } from './sistemaEnvolvido.entity';
 
 @Entity()
 export class Sistema {
@@ -7,4 +8,7 @@ export class Sistema {
 
   @Column({ type: 'boolean', name: 'ativo' })
   ativo: boolean;
+
+  @OneToMany(()=> SistemaEnvolvido, (sistemaEnvolvido) => sistemaEnvolvido.sistema)
+  sistemasEnvolvidos: SistemaEnvolvido[];
 }

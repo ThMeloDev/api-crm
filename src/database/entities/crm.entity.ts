@@ -1,7 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 import { Colaborador } from './colaborador.entity';
 import { Complexidade } from './complexidade.entity';
+import { Documento } from './documento.entity';
 import { SetorEnvolvido } from './setorEnvolvido.entity';
+import { SistemaEnvolvido } from './sistemaEnvolvido.entity';
 
 @Entity()
 export class Crm {
@@ -60,4 +62,10 @@ export class Crm {
 
   @OneToMany(() => SetorEnvolvido, (setorEnvolvido) => setorEnvolvido.crm)
   setoresEnvolvidos: SetorEnvolvido[];
+
+  @OneToMany(()=> SistemaEnvolvido, (sistemaEnvolvido) => sistemaEnvolvido.crm)
+  sistemasEnvolvidos: SistemaEnvolvido[];
+
+  @OneToMany(() => Documento, (documento) => documento.crm)
+  documentos: Documento[];
 }
