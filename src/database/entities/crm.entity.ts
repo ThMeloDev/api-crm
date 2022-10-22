@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 import { Colaborador } from './colaborador.entity';
 import { Complexidade } from './complexidade.entity';
 import { Documento } from './documento.entity';
@@ -6,12 +6,12 @@ import { SetorEnvolvido } from './setorEnvolvido.entity';
 import { SistemaEnvolvido } from './sistemaEnvolvido.entity';
 
 @Entity()
-export class Crm {
-  @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
+export class Crm{
+  @PrimaryColumn({ type: 'int', name: 'id'})
   id: number;
 
   @PrimaryColumn({ type: 'int', name: 'versao'})
-  versao: number;
+  versao: number ;
 
   @Column({ type: 'varchar', length: '30', name: 'nome' })
   nome: string;
@@ -20,7 +20,7 @@ export class Crm {
   dataAbertura: Date
 
   @Column({type:'timestamp', name:'dataFechamento', nullable: true})
-  dataFechamento: Date | null
+  dataFechamento: Date
 
   @Column({type:'text', name:'necessidade'})
   necessidade: string;
@@ -38,19 +38,19 @@ export class Crm {
   justificativa: string;
 
   @Column({type:'text', name:'alternativas', nullable:true})
-  alternativas: string | null;
+  alternativas: string;
 
   @Column({type:'date', name:'datalegal', nullable:true})
-  dataLegal: string | null;
+  dataLegal: string;
 
   @Column({type:'text', name:'impactomudanca', nullable:true})
-  impactoMudanca: string | null;
+  impactoMudanca: string;
 
   @Column({type:'text', name:'comportamentooffline', nullable:true})
-  comportamentoOffline: string | null;
+  comportamentoOffline: string;
   
   @Column({type:'text', name:'motivoatualizado', nullable:true})
-  motivoAtualizacao: string | null;
+  motivoAtualizacao: string;
 
   @ManyToOne(() => Colaborador,(colaborador) => colaborador.crms)
   @JoinColumn({name:'colaborador_matricula_criador', referencedColumnName:'matricula'})

@@ -12,5 +12,6 @@ import { DatabaseModule } from '../database/database.module';
     ...colaboradorProviders,
     ColaboradorService,
   ],
+  exports: [ColaboradorService]
 })
 export class ColaboradorModule {}

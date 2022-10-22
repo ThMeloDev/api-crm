@@ -10,6 +10,7 @@ import { SetorModule } from './modules/setor.module';
 import { SetorEnvolvidoModule } from './modules/setorEnvolvido.module';
 import { SistemaModule } from './modules/sistema.module';
 import { SistemaEnvolvidoModule } from './modules/sistemaEnvolvido.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: 
@@ -22,7 +23,8 @@ import { SistemaEnvolvidoModule } from './modules/sistemaEnvolvido.module';
     SetorModule,
     DocumentoModule,
     SistemaEnvolvidoModule,
-    SetorEnvolvidoModule
+    SetorEnvolvidoModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

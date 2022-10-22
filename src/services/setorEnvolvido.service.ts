@@ -13,22 +13,18 @@ export class SetorEnvolvidoService {
   async findSetores(crmId: number,crmVersao: number): Promise<SetorEnvolvido[]> {
     return await this.setorEnvolvidoReposity.find({
       select: {
-        setorNome:true,
-        colaboradorMatricula:true,
+        nomeSetor:true,
+        matriculaColaborador:true,
         justificativa:true
       },
       where: {
-
+        crmId: crmId,
         crmVersao: crmVersao,
       },
       relations:{
         flag: true
       }
     });
-  }
-
-  async findOne(setorNome: string,crmId:number,crmVersao:number): Promise<SetorEnvolvido> {
-    return await this.setorEnvolvidoReposity.findOneBy({ setorNome, crmId, crmVersao });
   }
   
 }

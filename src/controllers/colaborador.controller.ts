@@ -1,28 +1,26 @@
-import { Controller, Get, HttpStatus, Query, Response } from '@nestjs/common';
+import { Body, Controller, Get, Post} from '@nestjs/common';
 import { Colaborador } from 'src/database/entities/colaborador.entity';
 import { ColaboradorService } from 'src/services/colaborador.service';
+
 
 
 @Controller('colaborador')
 export class ColaboradorController {
   constructor(private readonly colaboradorService: ColaboradorService) {}
 
-  @Get('all')
-  async findAll(): Promise<Colaborador[]> {
-    return await this.colaboradorService.findAll();
+  @Post('setor')
+  async listColaboradoresDoSetor(@Body() params): Promise<Colaborador[]> {
+    return await this.colaboradorService.listColaboradoresDoSetor(params.setor);
+  }
+
+  @Post('cadastrar')
+  async registerColaborador(@Body() data): Promise<any> {
+    return await this.colaboradorService.registerColaborador(data)
   }
 
   @Get()
-  async findOne(@Query() params, @Response() res: any ): Promise<Colaborador> {
-    if (params.matricula === null || params.matricula === undefined || typeof params.matricula != 'string') {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(
-        {
-          'statusCode': 500,
-          'message': 'a matricula não foi informada ou não é uma string',
-          'error': 'Internal Server Error'
-        }
-      )
-    }
-    return res.send(await this.colaboradorService.findOne(params.matricula)) ;
+  async findOne(@Body() params): Promise<any> {
+    return await this.colaboradorService.findOne(params.matricula)
   }
+
 }

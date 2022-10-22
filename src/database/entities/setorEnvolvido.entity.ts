@@ -12,15 +12,16 @@ export class SetorEnvolvido {
   crmVersao: number;
   
   @PrimaryColumn({ type: 'varchar', length: 40, name: 'setor_nome' })
-  setorNome: string;
+  nomeSetor: string;
 
   @Column({ type: 'varchar', length: 10, name: 'colaborador_matricula', nullable:true})
-  colaboradorMatricula: string | null;
+  matriculaColaborador: string | null;
 
   @Column({ type: 'text', name: 'justificativa', nullable:true })
   justificativa: string | null;
 
   @ManyToOne(() => Flag, (flag) => flag.setoresEnvolvidos)
+  @JoinColumn({name: 'flag_nome', referencedColumnName: 'nome'})
   flag: Flag;
 
   @ManyToOne(() => Crm, (crm) => crm.setoresEnvolvidos)
