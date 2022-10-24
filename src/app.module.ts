@@ -11,6 +11,9 @@ import { SetorEnvolvidoModule } from './modules/setorEnvolvido.module';
 import { SistemaModule } from './modules/sistema.module';
 import { SistemaEnvolvidoModule } from './modules/sistemaEnvolvido.module';
 import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { TokenModule } from './modules/token.module';
 
 @Module({
   imports: 
@@ -27,6 +30,9 @@ import { AuthModule } from './auth/auth.module';
     AuthModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, {
+    provide: APP_GUARD,
+    useClass: JwtAuthGuard,
+  },],
 })
 export class AppModule {}

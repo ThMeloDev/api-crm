@@ -16,6 +16,10 @@ export class ColaboradorService {
     return result;
   }
 
+  async findOneLogin(matricula: string): Promise<any> {
+     return await this.colaboradorReposity.findOneBy({matricula:matricula})
+  }
+
   async listColaboradoresDoSetor(setor: string): Promise<Colaborador[]> {
     return await this.colaboradorReposity.find({
       select: {
