@@ -1,7 +1,24 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Crm } from './crm.entity';
-import { Flag } from './flag.entity';
 import { Setor } from './setor.entity';
+
+export interface SetorEnvolvidoProps{
+
+  crmId: number;
+  crmVersao: number;
+  nomeSetor: string;
+  matriculaColaborador?: string;
+  justificativa?: string;
+  flag?: FLAGS_SETORES_ENVOLVIDOS;
+  crm?: Crm
+  setor?: Setor
+}
+
+export enum FLAGS_SETORES_ENVOLVIDOS{
+  PENDENTE = 'pendente',
+  REJEITADO = 'rejeitado',
+  APROVADO = 'aprovado'
+} 
 
 @Entity()
 export class SetorEnvolvido {
@@ -20,9 +37,8 @@ export class SetorEnvolvido {
   @Column({ type: 'text', name: 'justificativa', nullable:true })
   justificativa: string | null;
 
-  @ManyToOne(() => Flag, (flag) => flag.setoresEnvolvidos)
-  @JoinColumn({name: 'flag_nome', referencedColumnName: 'nome'})
-  flag: Flag;
+  @Column({ type: 'enum', enum:FLAGS_SETORES_ENVOLVIDOS , name: 'flag_nome', nullable:true })
+  flag: FLAGS_SETORES_ENVOLVIDOS;
 
   @ManyToOne(() => Crm, (crm) => crm.setoresEnvolvidos)
   @JoinColumn([
@@ -34,4 +50,9 @@ export class SetorEnvolvido {
   @ManyToOne(() => Setor, (setor) => setor.setoresEnvolvidos)
   @JoinColumn([{name: 'setor_nome', referencedColumnName: 'nome'}])
   setor: Setor
+
+  setProps(props: SetorEnvolvidoProps):SetorEnvolvido{
+    Object.assign(this,props)
+    return this
+  }
 }

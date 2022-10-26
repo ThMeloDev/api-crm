@@ -5,6 +5,7 @@ import { SetorEnvolvidoService } from 'src/services/setorEnvolvido.service';
 import { DatabaseModule } from '../database/database.module';
 
 
+
 @Module({
   imports: [DatabaseModule],
   controllers: [SetorEnvolvidoController],
@@ -12,5 +13,6 @@ import { DatabaseModule } from '../database/database.module';
     ...setorEnvolvidoProviders,
     SetorEnvolvidoService,
   ],
+  exports:[SetorEnvolvidoService]
 })
 export class SetorEnvolvidoModule {}

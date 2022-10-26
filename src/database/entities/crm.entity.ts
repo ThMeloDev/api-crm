@@ -5,18 +5,43 @@ import { Documento } from './documento.entity';
 import { SetorEnvolvido } from './setorEnvolvido.entity';
 import { SistemaEnvolvido } from './sistemaEnvolvido.entity';
 
+export interface CrmProps{
+  
+  id: number;
+  versao: number ;
+  nome: string;
+  dataAbertura: Date
+  dataFechamento?: Date
+  necessidade: string;
+  impacto: string;
+  descricao: string;
+  objetivo: string;
+  justificativa: string;
+  alternativas: string;
+  dataLegal?: string;
+  impactoMudanca?: string;
+  comportamentoOffline?: string;
+  motivoAtualizacao?: string;
+  colaboradorCriador: Colaborador;
+  complexidade?: Complexidade;
+  setoresEnvolvidos: SetorEnvolvido[];
+  sistemasEnvolvidos?: SistemaEnvolvido[];
+  documentos?: Documento[];
+}
+
 @Entity()
-export class Crm{
-  @PrimaryColumn({ type: 'int', name: 'id'})
+export class Crm implements CrmProps{
+
+  @PrimaryGeneratedColumn({ type: 'int', name: 'id'})
   id: number;
 
-  @PrimaryColumn({ type: 'int', name: 'versao'})
+  @PrimaryColumn({ type: 'int', name: 'versao',default:1})
   versao: number ;
 
   @Column({ type: 'varchar', length: '30', name: 'nome' })
   nome: string;
 
-  @Column({type:'timestamp', name:'dataabertura'})
+  @Column({type:'timestamp', name:'dataAbertura'})
   dataAbertura: Date
 
   @Column({type:'timestamp', name:'dataFechamento', nullable: true})
@@ -43,13 +68,13 @@ export class Crm{
   @Column({type:'date', name:'datalegal', nullable:true})
   dataLegal: string;
 
-  @Column({type:'text', name:'impactomudanca', nullable:true})
+  @Column({type:'text', name:'impactoMudanca', nullable:true})
   impactoMudanca: string;
 
-  @Column({type:'text', name:'comportamentooffline', nullable:true})
+  @Column({type:'text', name:'comportamentoOffline', nullable:true})
   comportamentoOffline: string;
   
-  @Column({type:'text', name:'motivoatualizado', nullable:true})
+  @Column({type:'text', name:'motivoAtualizacao', nullable:true})
   motivoAtualizacao: string;
 
   @ManyToOne(() => Colaborador,(colaborador) => colaborador.crms)
@@ -68,4 +93,9 @@ export class Crm{
 
   @OneToMany(() => Documento, (documento) => documento.crm)
   documentos: Documento[];
-}
+
+  setProps(props: CrmProps):Crm{
+    Object.assign(this,props)
+    return this
+  }
+} 

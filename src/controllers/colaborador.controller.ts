@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Query, UseGuards} from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard, Public } from 'src/auth/jwt-auth.guard';
 import { Colaborador } from 'src/database/entities/colaborador.entity';
 import { ColaboradorService } from 'src/services/colaborador.service';
 
@@ -13,7 +13,7 @@ export class ColaboradorController {
   async listColaboradoresDoSetor(@Query() params): Promise<Colaborador[]> {
     return await this.colaboradorService.listColaboradoresDoSetor(params.setor);
   }
-
+  
   @Post('cadastrar')
   async registerColaborador(@Body() data): Promise<any> {
     return await this.colaboradorService.registerColaborador(data)

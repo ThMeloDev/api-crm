@@ -1,6 +1,15 @@
+
 import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Crm } from './crm.entity';
 import { Sistema } from './sistema.entity';
+
+export interface SistemaEnvolvidoProps{
+  sistemaNome:string,
+  crmId: number,
+  crmVersao: number,
+  crm?: Crm,
+  sistema?: Sistema
+}
 
 @Entity()
 export class SistemaEnvolvido {
@@ -23,4 +32,9 @@ export class SistemaEnvolvido {
   @ManyToOne(() => Sistema, (sistema) => sistema.sistemasEnvolvidos)
   @JoinColumn({name: 'sistema_nome', referencedColumnName: 'nome'})
   sistema: Sistema;
+
+  setProps(props: SistemaEnvolvidoProps): SistemaEnvolvido{
+    Object.assign(this,props)
+    return this
+  }
 }

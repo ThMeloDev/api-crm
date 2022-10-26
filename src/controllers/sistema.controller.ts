@@ -9,8 +9,8 @@ export class SistemaController {
   constructor(private readonly sistemaService: SistemaService) {}
 
   @Get('all')
-  async findAll(): Promise<Sistema[]> {
-    return await this.sistemaService.findAll();
+  async listSystems(): Promise<Sistema[]> {
+    return await this.sistemaService.listSystems();
   }
 
   @Get()

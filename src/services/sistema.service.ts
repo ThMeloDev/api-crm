@@ -10,8 +10,15 @@ export class SistemaService {
     private sistemaReposity: Repository<Sistema>,
   ) {}
 
-  async findAll(): Promise<Sistema[]> {
-    return await this.sistemaReposity.find();
+  async listSystems(): Promise<Sistema[]> {
+    return await this.sistemaReposity.find({
+      select: {
+        nome: true
+      },
+      where:{
+        ativo: true
+      }
+    });
   }
 
   async findOne(nome:string): Promise<Sistema> {

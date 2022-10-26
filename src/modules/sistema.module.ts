@@ -12,5 +12,6 @@ import { DatabaseModule } from '../database/database.module';
     ...sistemaProviders,
     SistemaService,
   ],
+  exports:[SistemaService]
 })
 export class SistemaModule {}

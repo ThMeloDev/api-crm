@@ -12,5 +12,6 @@ import { DatabaseModule } from '../database/database.module';
     ...setorProviders,
     SetorService,
   ],
+  exports:[SetorService]
 })
 export class SetorModule {}
