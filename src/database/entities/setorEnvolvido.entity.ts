@@ -38,7 +38,7 @@ export class SetorEnvolvido {
   justificativa: string | null;
 
   @Column({ type: 'enum', enum:FLAGS_SETORES_ENVOLVIDOS , name: 'flag_nome', nullable:true })
-  flag: FLAGS_SETORES_ENVOLVIDOS;
+  flag: string;
 
   @ManyToOne(() => Crm, (crm) => crm.setoresEnvolvidos)
   @JoinColumn([

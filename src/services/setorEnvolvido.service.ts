@@ -24,9 +24,6 @@ export class SetorEnvolvidoService {
         crmId: crmId,
         crmVersao: crmVersao,
       },
-      relations: {
-        flag: true,
-      },
     });
   }
 
@@ -38,9 +35,11 @@ export class SetorEnvolvidoService {
     try {
       setoresEnvolvidos.map((setor) => {
         let setorEnvolvido = new SetorEnvolvido();
-        setorEnvolvido.crmId = crmId;
-        setorEnvolvido.crmVersao = crmVersao;
-        setorEnvolvido.nomeSetor = setor;
+        setorEnvolvido.setProps({
+          crmId: crmId,
+          crmVersao: crmVersao,
+          nomeSetor: setor
+        })
         this.setorEnvolvidoReposity.save(setorEnvolvido)
       });
     } catch (error) {

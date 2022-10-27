@@ -1,6 +1,12 @@
 import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Crm } from './crm.entity';
 
+export interface DocumentoProps{
+  pathDocumento: string,
+  crm_id: number,
+  crm_versao: number
+}
+
 @Entity()
 export class Documento {
   @PrimaryColumn({ type: 'varchar', length: 100, name: 'pathDocumento' })
@@ -18,4 +24,9 @@ export class Documento {
     { name: 'crm_versao', referencedColumnName: 'versao' },
   ])
   crm: Crm;
+
+  setProps(props: DocumentoProps): Documento{
+    Object.assign(this,props)
+    return this
+  }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Query, Response } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Query, Response } from '@nestjs/common';
 import { Documento } from 'src/database/entities/documento.entity';
 import { DocumentoService } from 'src/services/documento.service';
 
@@ -61,4 +61,10 @@ export class DocumentoController {
     }
     return res.send(await this.documentoService.findOne(params.path,params.id,params.versao)) ;
   }
+
+  @Post('save')
+  async saveDocuments(@Body() params): Promise<any>{
+    return await this.documentoService.saveDocuments(params.crm_id, params.crm_versao,params.documentos)
+  }
+
 }

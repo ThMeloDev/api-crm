@@ -12,5 +12,6 @@ import { DatabaseModule } from '../database/database.module';
     ...documentoProviders,
     DocumentoService,
   ],
+  exports:[DocumentoService]
 })
 export class DocumentoModule {}

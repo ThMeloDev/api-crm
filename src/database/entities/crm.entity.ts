@@ -85,10 +85,10 @@ export class Crm implements CrmProps{
   @JoinColumn({name:'complexidade_nome', referencedColumnName:'nome'})
   complexidade: Complexidade;
 
-  @OneToMany(() => SetorEnvolvido, (setorEnvolvido) => setorEnvolvido.crm)
+  @OneToMany(() => SetorEnvolvido, (setorEnvolvido) => setorEnvolvido.crm, {cascade:true})
   setoresEnvolvidos: SetorEnvolvido[];
 
-  @OneToMany(()=> SistemaEnvolvido, (sistemaEnvolvido) => sistemaEnvolvido.crm)
+  @OneToMany(()=> SistemaEnvolvido, (sistemaEnvolvido) => sistemaEnvolvido.crm, {cascade:true})
   sistemasEnvolvidos: SistemaEnvolvido[];
 
   @OneToMany(() => Documento, (documento) => documento.crm)

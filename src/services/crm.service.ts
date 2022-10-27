@@ -1,8 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Crm } from 'src/database/entities/crm.entity';
+import { Documento } from 'src/database/entities/documento.entity';
 import { FLAGS_SETORES_ENVOLVIDOS, SetorEnvolvido } from 'src/database/entities/setorEnvolvido.entity';
 import { SistemaEnvolvido } from 'src/database/entities/sistemaEnvolvido.entity';
 import { Repository } from 'typeorm';
+import { DocumentoService } from './documento.service';
 import { SetorService } from './setor.service';
 import { SistemaService } from './sistema.service';
 
@@ -16,22 +18,49 @@ export class CrmService {
     private setorEnvolvidoReposity: Repository<SetorEnvolvido>,
     @Inject('SISTEMAENVOLVIDO_REPOSITORY')
     private sistemaEnvolvidoReposity: Repository<SistemaEnvolvido>,
+    @Inject('DOCUMENTO_REPOSITORY')
+    private documentoReposity: Repository<Documento>,
+    private documentoService: DocumentoService,
     private sistemaService : SistemaService,
     private setorService: SetorService
   ) {}
 
   async findOne(id: number, versao: number): Promise<Crm[]> {
     return await this.crmReposity.find({
+      select:{
+        id:true,
+        versao:true,
+        nome: true,
+        necessidade: true,
+        objetivo: true,
+        descricao:true,
+        dataAbertura: true,
+        dataFechamento: true,
+        dataLegal:true,
+        impacto: true,
+        impactoMudanca: true,
+        justificativa: true,
+        motivoAtualizacao: true,
+        comportamentoOffline:true,
+        colaboradorCriador:{
+          matricula: true
+        },setoresEnvolvidos:{
+         nomeSetor:true,
+         flag: true,
+         justificativa: true,
+         matriculaColaborador: true
+        },
+        sistemasEnvolvidos:{sistemaNome: true},
+        alternativas: true,
+      },
       where: {
         id: id,
         versao: versao,
       },
       relations: {
-        complexidade: true,
-        colaboradorCriador: { setor: true },
+        colaboradorCriador: {setor: true},
         setoresEnvolvidos: true,
-        sistemasEnvolvidos: true,
-        documentos: true,
+        sistemasEnvolvidos: true
       },
     });
   }
@@ -44,17 +73,22 @@ export class CrmService {
       .getRawOne();
   }
 
-  async maxIdWithVersion(): Promise<Crm> {
+  async maxId(): Promise<any> {
     return await this.crmReposity.query(
-      'select id , versao from crm where crm.id = (select max(crm2.id) from crm crm2);'
+      'select id from crm where crm.id = (select max(crm2.id) from crm crm2);'
     )
   }
 
   async createCrm(data: any): Promise<any> {
+    //console.log(`data: ${JSON.stringify(data)}`)
     try {
       if (data.id != null || data.id != undefined) {
         const newCrm = await this.maxVersion(data.id);
         data.versao = newCrm.versao + 1;
+      }else{
+        const crmWithMaxId = await this.maxId()
+        data.id = crmWithMaxId[0].id + 1
+        data.versao = 1
       }
       let crm = new Crm().setProps({
         id: data.id,
@@ -73,33 +107,33 @@ export class CrmService {
         setoresEnvolvidos: [],
         sistemasEnvolvidos: []
       })
-      const c = await this.crmReposity.save(crm);
-
-     for(const nomeSetorEnvolvido of data.setoresEnvolvidos){
-       const setor = await this.setorService.findOne(nomeSetorEnvolvido)
-       const setorEnvolvido = new SetorEnvolvido().setProps({
-         crmId: c.id,
-         crmVersao: c.versao,
-         nomeSetor: setor.nome,
-         flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE
-       })
-       const setorEnvolvidoResponse = await this.setorEnvolvidoReposity.save(setorEnvolvido)
-
-       console.log(`setorEnvolvidoResponse: ${JSON.stringify(setorEnvolvidoResponse)}`)
-       
-      }
-
+      
+      for(const nomeSetorEnvolvido of data.setoresEnvolvidos){
+        const setor = await this.setorService.findOne(nomeSetorEnvolvido)
+        const setorEnvolvido = new SetorEnvolvido().setProps({
+          crmId: crm.id,
+          crmVersao: crm.versao,
+          nomeSetor: setor.nome,
+          crm: crm,
+          flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
+          setor: setor
+        })
+        crm.setoresEnvolvidos.push(setorEnvolvido)
+        // await this.setorEnvolvidoReposity.save(setorEnvolvido)
+      
+       }
       for(const nomeSistemaEnvolvido of data.sistemasEnvolvidos){
         const sistema = await this.sistemaService.findOne(nomeSistemaEnvolvido)
-        console.log(`sistema: ${JSON.stringify(sistema)}`)
         const sistemaEnvolvido = new SistemaEnvolvido().setProps({
-          crmId: c.id,
-          crmVersao: c.versao,
-          sistemaNome: sistema.nome
+          crmId: crm.id,
+          crmVersao: crm.versao,
+          sistemaNome: sistema.nome,
+          crm: crm,
+          sistema: sistema
         })
-        await this.sistemaEnvolvidoReposity.save(sistemaEnvolvido);
+        crm.sistemasEnvolvidos.push(sistemaEnvolvido)
       }
-
+      await this.crmReposity.save(crm)
       return {message: 'CADASTRADA'}
     } catch (error) {
       return {message: 'ERROR'};
