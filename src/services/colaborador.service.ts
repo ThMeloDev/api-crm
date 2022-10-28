@@ -11,13 +11,42 @@ export class ColaboradorService {
   ) {}
 
   async findOne(matricula: string): Promise<any> {
-    const colaborador = await this.colaboradorReposity.findOneBy({matricula:matricula})
-    const { senha, ...result } = colaborador;
-    return result;
+    const colaborador = await this.colaboradorReposity.findOne({
+      select:{
+        nome:true,
+        matricula:true,
+        cpf:true,
+        email:true,
+        sobrenome: true,
+        telefone:true,
+        setor:{nome:true}
+      },
+      relations:{
+        setor:true
+      },
+      where:{matricula:matricula}
+    });
+    return colaborador;
   }
 
   async findOneLogin(matricula: string): Promise<any> {
-     return await this.colaboradorReposity.findOneBy({matricula:matricula})
+      const colaborador = await this.colaboradorReposity.findOne({
+        select:{
+          nome:true,
+          matricula:true,
+          cpf:true,
+          email:true,
+          sobrenome: true,
+          telefone:true,
+          senha:true,
+          setor:{nome:true}
+        },
+        relations:{
+          setor:true
+        },
+        where:{matricula:matricula}
+      });
+      return colaborador
   }
 
   async listColaboradoresDoSetor(setor: string): Promise<Colaborador[]> {

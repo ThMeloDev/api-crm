@@ -1,4 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Colaborador } from './colaborador.entity';
 import { Crm } from './crm.entity';
 import { Setor } from './setor.entity';
 
@@ -50,6 +51,10 @@ export class SetorEnvolvido {
   @ManyToOne(() => Setor, (setor) => setor.setoresEnvolvidos)
   @JoinColumn([{name: 'setor_nome', referencedColumnName: 'nome'}])
   setor: Setor
+
+  @ManyToOne(() => Colaborador, (colaborador) => colaborador.setoresEnvolvidos)
+  @JoinColumn([{name: 'colaborador_matricula', referencedColumnName: 'matricula'}])
+  colaborador: Colaborador
 
   setProps(props: SetorEnvolvidoProps):SetorEnvolvido{
     Object.assign(this,props)

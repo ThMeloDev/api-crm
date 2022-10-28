@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryColumn } from 'typeorm';
 import { Crm } from './crm.entity';
 import { Setor } from './setor.entity';
+import { SetorEnvolvido } from './setorEnvolvido.entity';
 
 @Entity()
 export class Colaborador {
@@ -28,6 +29,9 @@ export class Colaborador {
   @ManyToOne(() => Setor, (setor) => setor.colaboradores)
   @JoinColumn({ name: 'setor_nome', referencedColumnName: 'nome' })
   setor: Setor;
+
+  @OneToMany(() => SetorEnvolvido, (setorEnvolvido) => setorEnvolvido.colaborador)
+  setoresEnvolvidos: SetorEnvolvido[];
 
   @OneToMany(() => Crm, (crm) => crm.colaboradorCriador)
   crms: Crm[];

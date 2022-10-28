@@ -12,7 +12,7 @@ export class SistemaEnvolvidoService {
 
   async findSistemas(crmId: number,crmVersao: number): Promise<SistemaEnvolvido[]> {
     return await this.sistemaEnvolvidoReposity.find({
-      select: {sistemaNome:true},
+      select: {nomeSistema:true},
       where: {
         crmId: crmId,
         crmVersao: crmVersao,
@@ -20,8 +20,8 @@ export class SistemaEnvolvidoService {
     });
   }
 
-  async findOne(sistemaNome: string,crmId:number,crmVersao:number): Promise<SistemaEnvolvido> {
-    return await this.sistemaEnvolvidoReposity.findOneBy({ sistemaNome, crmId, crmVersao });
+  async findOne(nomeSistema: string,crmId:number,crmVersao:number): Promise<SistemaEnvolvido> {
+    return await this.sistemaEnvolvidoReposity.findOneBy({ nomeSistema, crmId, crmVersao });
   }
   
 }
