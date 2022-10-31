@@ -39,7 +39,7 @@ export interface CrmProps {
 
 @Entity()
 export class Crm implements CrmProps {
-  @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
+  @PrimaryColumn({ type: 'int', name: 'id' })
   id: number;
 
   @PrimaryColumn({ type: 'int', name: 'versao', default: 1 })

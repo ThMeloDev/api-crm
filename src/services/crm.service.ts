@@ -90,7 +90,7 @@ export class CrmService {
         else{data.id = crmWithMaxId[0].id + 1}  
         data.versao = 1
       }
-      
+      console.log(`data: ${JSON.stringify(data)} \n`)
       let crm = new Crm().setProps({
         id: data.id,
         versao: data.versao,
@@ -117,6 +117,7 @@ export class CrmService {
           nomeSetor: setor.nome,
           crm: crm,
           flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
+          justificativa: null,
           setor: setor
         })
         crm.setoresEnvolvidos.push(setorEnvolvido)
@@ -133,13 +134,82 @@ export class CrmService {
         })
         crm.sistemasEnvolvidos.push(sistemaEnvolvido)
       }
-
       await this.crmReposity.save(crm)
-      return {message: 'CADASTRADA'}
+      return {message: 'SUCESSO'};
     } catch (error) {
       console.log(error)
       return {message: 'ERROR'};
     }
+  }
+
+  async updateCrm(data: any): Promise<any> {
+    try {
+      data.versao = data.versao + 1;
+      console.log(`data: ${JSON.stringify(data)} \n`)
+      let crm = new Crm().setProps({
+        id: data.id,
+        versao: data.versao,
+        alternativas: data.alternativas,
+        colaboradorCriador: data.colaboradorCriador,
+        comportamentoOffline: data.comportamentoOffline,
+        dataAbertura: data.dataAbertura,
+        dataLegal: data.dataLegal,
+        descricao: data.descricao,
+        impacto: data.impacto,
+        justificativa: data.justificativa,
+        necessidade: data.necessidade,
+        nome: data.nome,
+        objetivo: data.objetivo,
+        setoresEnvolvidos: [],
+        sistemasEnvolvidos: []
+      })
+      
+      for(const sectorInvolved of data.setoresEnvolvidos){
+        const setor = await this.setorService.findOne(sectorInvolved.nomeSetor)
+        console.log(setor)
+        const setorEnvolvido = new SetorEnvolvido().setProps({
+          crmId: crm.id,
+          crmVersao: crm.versao,
+          nomeSetor: setor.nome,
+          crm: crm,
+          flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
+          justificativa: '',
+          setor: setor
+        })
+        crm.setoresEnvolvidos.push(setorEnvolvido)
+      }
+
+      for(const system of data.sistemasEnvolvidos){
+        const sistema = await this.sistemaService.findOne(system.nomeSistema)
+        const sistemaEnvolvido = new SistemaEnvolvido().setProps({
+          crmId: crm.id,
+          crmVersao: crm.versao,
+          nomeSistema: sistema.nome,
+          crm: crm,
+          sistema: sistema
+        })
+        crm.sistemasEnvolvidos.push(sistemaEnvolvido)
+      }
+      await this.crmReposity.save(crm)
+      return {message: 'SUCESSO'};
+    } catch (error) {
+      console.log(error)
+      return {message: 'ERROR'};
+    }
+  }
+
+  async rejectCrm(data: any): Promise<any> {
+    
+    try{
+      const crmRejected = 
+      await this.crmReposity
+      .query(`update setor_envolvido set flag_nome= '${data.setorEnvolvido.flag}', colaborador_matricula= '${data.setorEnvolvido.matriculaColaborador}', justificativa='${data.setorEnvolvido.justificativa}' where crm_id=${data.id} and crm_versao=${data.versao} and setor_nome='${data.setorEnvolvido.nomeSetor}'`)
+      return {message: 'SUCESSO'};
+    }catch(error){
+      console.log(error)
+      return {message: 'ERROR'};
+    }
+
   }
 
 
@@ -177,7 +247,7 @@ export class CrmService {
   //CRMs aprovadas que o usuario criou
   async listApprovedCrm1(matricula: string): Promise<Crm[] | undefined>{
     return await this.crmReposity
-    .query(`SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and criador.matricula = '1' group by crm.id, crm.versao, criador.nome, criador.sobrenome,criador.setor_nome order by crm.id;`)
+    .query(`SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and criador.matricula = '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome,criador.setor_nome order by crm.id;`)
   }
 
   //CRMs aprovadas que o usuario nao criou e esta envolvido

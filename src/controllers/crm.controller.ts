@@ -55,5 +55,16 @@ export class CrmController {
   async createCrm(@Body() data): Promise<any>{
     return await this.crmService.createCrm(data);
   }
+
+  
+  @Post('updateCrm')
+  async updateCrm(@Body() data): Promise<any>{
+    return await this.crmService.updateCrm(data);
+  }
+
+  @Post('reject')
+  async rejectCrm(@Body() data): Promise<any>{
+    return await this.crmService.rejectCrm(data);
+  }
  
 }
