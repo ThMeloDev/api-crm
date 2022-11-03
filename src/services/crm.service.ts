@@ -235,9 +235,16 @@ export class CrmService {
 
   async approveCrm(data: any): Promise<any> {
     try {
-      const crmRejected = await this.crmReposity.query(
-        `update setor_envolvido set flag_nome= '${data.setorEnvolvido.flag}', colaborador_matricula= '${data.setorEnvolvido.matriculaColaborador}' where crm_id=${data.id} and crm_versao=${data.versao} and setor_nome='${data.setorEnvolvido.nomeSetor}'`,
-      );
+      console.log(data.setorEnvolvido.nomeSetor)
+      if(data.setorEnvolvido.nomeSetor != 'TI'){
+        const crmApproved = await this.crmReposity.query(
+          `update setor_envolvido set flag_nome= '${data.setorEnvolvido.flag}', colaborador_matricula= '${data.setorEnvolvido.matriculaColaborador}' where crm_id=${data.id} and crm_versao=${data.versao} and setor_nome='${data.setorEnvolvido.nomeSetor}'`,
+        );
+      }else{
+        const crmApproved = await this.crmReposity.query(
+          `begin transaction;update setor_envolvido set flag_nome= '${data.setorEnvolvido.flag}', colaborador_matricula= '${data.setorEnvolvido.matriculaColaborador}' where crm_id=${data.id} and crm_versao=${data.versao} and setor_nome='${data.setorEnvolvido.nomeSetor}';update crm set complexidade_nome = '${data.complexidade}', impactoMudanca = '${data.impactoMudanca}';commit;`,
+        );
+      }
       return { message: 'SUCESSO' };
     } catch (error) {
       console.log(error);
