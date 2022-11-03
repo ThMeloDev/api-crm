@@ -66,5 +66,15 @@ export class CrmController {
   async rejectCrm(@Body() data): Promise<any>{
     return await this.crmService.rejectCrm(data);
   }
+
+  @Post('approve')
+  async approveCrm(@Body() data): Promise<any>{
+    return await this.crmService.approveCrm(data);
+  }
+
+  @Get('maxVersion')
+  async maxVersion(@Query() params): Promise<any>{
+    return await this.crmService.maxVersion(params.id);
+  } 
  
 }
