@@ -68,6 +68,48 @@ export class CrmService {
     });
   }
 
+  async getAllCrms(crmId: number): Promise<Crm[]> {
+    return await this.crmReposity
+      .find({
+        select: {
+          id: true,
+          versao: true,
+          nome: true,
+          necessidade: true,
+          objetivo: true,
+          descricao: true,
+          dataAbertura: true,
+          dataFechamento: true,
+          dataLegal: true,
+          impacto: true,
+          impactoMudanca: true,
+          justificativa: true,
+          motivoAtualizacao: true,
+          comportamentoOffline: true,
+          colaboradorCriador: {
+            nome:true,
+            sobrenome:true
+          },
+          setoresEnvolvidos: {
+            nomeSetor: true,
+            flag: true,
+            justificativa: true,
+            matriculaColaborador: true,
+          },
+          sistemasEnvolvidos: { nomeSistema: true },
+          alternativas: true,
+        },
+        where: {
+          id: crmId,
+        },
+        relations: {
+          colaboradorCriador: { setor: true },
+          setoresEnvolvidos: true,
+          sistemasEnvolvidos: true,
+        },
+      })
+  }
+
   async maxVersion(crmId): Promise<Crm> {
     return await this.crmReposity
       .createQueryBuilder('crm')
@@ -96,7 +138,7 @@ export class CrmService {
         }
         data.versao = 1;
       }
-      console.log(`data: ${JSON.stringify(data)} \n`);
+      
       let crm = new Crm().setProps({
         id: data.id,
         versao: data.versao,
@@ -151,10 +193,10 @@ export class CrmService {
   async updateCrm(data: any): Promise<any> {
     try {
       data.versao = data.versao + 1;
-      console.log(`data: ${JSON.stringify(data)} \n`);
       let crm = new Crm().setProps({
         id: data.id,
         versao: data.versao,
+        nome: data.nome,
         alternativas: data.alternativas,
         colaboradorCriador: data.colaboradorCriador,
         comportamentoOffline: data.comportamentoOffline,
@@ -164,7 +206,6 @@ export class CrmService {
         impacto: data.impacto,
         justificativa: data.justificativa,
         necessidade: data.necessidade,
-        nome: data.nome,
         objetivo: data.objetivo,
         setoresEnvolvidos: [],
         sistemasEnvolvidos: [],
@@ -215,7 +256,7 @@ export class CrmService {
       }
       await this.crmReposity.save(crm);
       return { message: 'SUCESSO' };
-    } catch (error) {
+    } catch (error) { 
       console.log(error);
       return { message: 'ERROR' };
     }
@@ -235,7 +276,7 @@ export class CrmService {
 
   async approveCrm(data: any): Promise<any> {
     try {
-      console.log(data.setorEnvolvido.nomeSetor)
+      
       if(data.setorEnvolvido.nomeSetor != 'TI'){
         const crmApproved = await this.crmReposity.query(
           `update setor_envolvido set flag_nome= '${data.setorEnvolvido.flag}', colaborador_matricula= '${data.setorEnvolvido.matriculaColaborador}' where crm_id=${data.id} and crm_versao=${data.versao} and setor_nome='${data.setorEnvolvido.nomeSetor}'`,
@@ -255,14 +296,14 @@ export class CrmService {
   //CRMs rejeitadas que o usuario criou
   async listRejectedCrm1(matricula: string): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'rejeitado') FROM setor_envolvido se JOIN crm ON (se.crm_id = crm.id AND se.crm_versao = crm.versao) JOIN colaborador criador ON (criador.matricula = crm.colaborador_matricula_criador) WHERE (SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0 AND (SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'rejeitado' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id)) >= 1 AND se.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND criador.matricula = '${matricula}' GROUP BY crm.id,criador.nome,criador.sobrenome,crm.versao,criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'rejeitado') FROM setor_envolvido se JOIN crm ON (se.crm_id = crm.id AND se.crm_versao = crm.versao) JOIN colaborador criador ON (criador.matricula = crm.colaborador_matricula_criador) WHERE (SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0 AND (SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'rejeitado' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id)) >= 1 AND se.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND criador.matricula = '${matricula}' GROUP BY crm.id,criador.nome,criador.sobrenome,crm.versao,criador.setor_nome order by crm.id;`,
     );
   }
 
   //CRMs rejeitadas que o usuario nao criou
   async listRejectedCrm2(matricula: string): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome,criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'rejeitado') FROM setor_envolvido se JOIN crm ON (se.crm_id = crm.id AND se.crm_versao = crm.versao) JOIN colaborador criador ON (criador.matricula = crm.colaborador_matricula_criador) WHERE (SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0 AND (SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'rejeitado' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id)) >= 1 AND se.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND criador.matricula != '${matricula}' GROUP BY crm.id,criador.nome,criador.sobrenome,crm.versao,criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'rejeitado') FROM setor_envolvido se JOIN crm ON (se.crm_id = crm.id AND se.crm_versao = crm.versao) JOIN colaborador criador ON (criador.matricula = crm.colaborador_matricula_criador) WHERE (SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0 AND (SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'rejeitado' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id)) >= 1 AND se.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND criador.matricula != '${matricula}' GROUP BY crm.id,criador.nome,criador.sobrenome,crm.versao,criador.setor_nome order by crm.id;`,
     );
   }
 
@@ -272,14 +313,14 @@ export class CrmService {
     setor: string,
   ): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome,criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome) as setores from setor_envolvido se3 where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'pendente') FROM setor_envolvido se JOIN colaborador c ON (se.setor_nome = c.setor_nome) JOIN crm ON (crm.id = se.crm_id AND crm.versao = se.crm_versao) JOIN colaborador criador ON (crm.colaborador_matricula_criador = criador.matricula) WHERE crm.versao = (SELECT MAX(crm2.versao) FROM crm AS crm2 WHERE crm2.id = crm.id GROUP BY crm2.id) AND ( ( ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE (se2.flag_nome IN ('pendente','rejeitado')) AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0) AND ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome = 'TI') = 1) ) OR ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') > 0) ) AND criador.matricula != '${matricula}' and exists (SELECT * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome = 'pendente' and se2.setor_nome = '${setor}') GROUP BY crm.id,crm.versao,criador.nome,criador.sobrenome,criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome) as setores from setor_envolvido se3 where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'pendente') FROM setor_envolvido se JOIN colaborador c ON (se.setor_nome = c.setor_nome) JOIN crm ON (crm.id = se.crm_id AND crm.versao = se.crm_versao) JOIN colaborador criador ON (crm.colaborador_matricula_criador = criador.matricula) WHERE crm.versao = (SELECT MAX(crm2.versao) FROM crm AS crm2 WHERE crm2.id = crm.id GROUP BY crm2.id) AND ( ( ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE (se2.flag_nome IN ('pendente','rejeitado')) AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0) AND ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome = 'TI') = 1) ) OR ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') > 0) ) AND criador.matricula != '${matricula}' and exists (SELECT * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome = 'pendente' and se2.setor_nome = '${setor}') GROUP BY crm.id,crm.versao,criador.nome,criador.sobrenome,criador.setor_nome order by crm.id;`,
     );
   }
 
   //CRMs pendentes que o usuario criou
   async listPendingCrm2(matricula: string): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome,criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome) as setores from setor_envolvido se3 where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'pendente') FROM setor_envolvido se JOIN colaborador c ON (se.setor_nome = c.setor_nome) JOIN crm ON (crm.id = se.crm_id AND crm.versao = se.crm_versao) JOIN colaborador criador ON (crm.colaborador_matricula_criador = criador.matricula) WHERE crm.versao = (SELECT MAX(crm2.versao) FROM crm AS crm2 WHERE crm2.id = crm.id GROUP BY crm2.id) AND ( ( ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE (se2.flag_nome IN ('pendente','rejeitado')) AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0) AND ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome = 'TI') = 1) ) OR ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') > 0) ) AND criador.matricula = '${matricula}' GROUP BY crm.id,crm.versao,criador.nome,criador.sobrenome,criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome) as setores from setor_envolvido se3 where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'pendente') FROM setor_envolvido se JOIN colaborador c ON (se.setor_nome = c.setor_nome) JOIN crm ON (crm.id = se.crm_id AND crm.versao = se.crm_versao) JOIN colaborador criador ON (crm.colaborador_matricula_criador = criador.matricula) WHERE crm.versao = (SELECT MAX(crm2.versao) FROM crm AS crm2 WHERE crm2.id = crm.id GROUP BY crm2.id) AND ( ( ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE (se2.flag_nome IN ('pendente','rejeitado')) AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0) AND ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome = 'TI') = 1) ) OR ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') > 0) ) AND criador.matricula = '${matricula}' GROUP BY crm.id,crm.versao,criador.nome,criador.sobrenome,criador.setor_nome order by crm.id;`,
     );
   }
 
@@ -289,28 +330,28 @@ export class CrmService {
     setor: string,
   ): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome,criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome) as setores from setor_envolvido se3 where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'pendente') FROM setor_envolvido se JOIN colaborador c ON (se.setor_nome = c.setor_nome) JOIN crm ON (crm.id = se.crm_id AND crm.versao = se.crm_versao) JOIN colaborador criador ON (crm.colaborador_matricula_criador = criador.matricula) WHERE crm.versao = (SELECT MAX(crm2.versao) FROM crm AS crm2 WHERE crm2.id = crm.id GROUP BY crm2.id) AND ( ( ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE (se2.flag_nome IN ('pendente','rejeitado')) AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0) AND ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome = 'TI') = 1) ) OR ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') > 0) ) AND criador.matricula != '${matricula}' and not exists (SELECT * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome = 'pendente' and se2.setor_nome = '${setor}') GROUP BY crm.id,crm.versao,criador.nome,criador.sobrenome,criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome) as setores from setor_envolvido se3 where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'pendente') FROM setor_envolvido se JOIN colaborador c ON (se.setor_nome = c.setor_nome) JOIN crm ON (crm.id = se.crm_id AND crm.versao = se.crm_versao) JOIN colaborador criador ON (crm.colaborador_matricula_criador = criador.matricula) WHERE crm.versao = (SELECT MAX(crm2.versao) FROM crm AS crm2 WHERE crm2.id = crm.id GROUP BY crm2.id) AND ( ( ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE (se2.flag_nome IN ('pendente','rejeitado')) AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') = 0) AND ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome = 'TI') = 1) ) OR ((SELECT COUNT(*) FROM setor_envolvido se2 WHERE se2.flag_nome = 'pendente' AND se2.crm_id = se.crm_id AND se2.crm_versao = (SELECT MAX(crm.versao) FROM crm WHERE crm.id = se.crm_id GROUP BY crm.id) AND se2.setor_nome != 'TI') > 0) ) AND criador.matricula != '${matricula}' and not exists (SELECT * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome = 'pendente' and se2.setor_nome = '${setor}') GROUP BY crm.id,crm.versao,criador.nome,criador.sobrenome,criador.setor_nome order by crm.id;`,
     );
   }
 
   //CRMs aprovadas que o usuario criou
   async listApprovedCrm1(matricula: string): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and criador.matricula = '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome,criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and criador.matricula = '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome,criador.setor_nome order by crm.id;`,
     );
   }
 
   //CRMs aprovadas que o usuario nao criou e esta envolvido
   async listApprovedCrm2(matricula: string): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and exists (select * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.colaborador_matricula = '${matricula}') and criador.matricula = '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome, criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and exists (select * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.colaborador_matricula = '${matricula}') and criador.matricula = '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome, criador.setor_nome order by crm.id;`,
     );
   }
 
   //CRMs aprovadas que o usuario nao criou e nao esta envolvido
   async listApprovedCrm3(matricula: string): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and exists (select * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.colaborador_matricula != '${matricula}') and criador.matricula != '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome, criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and exists (select * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.colaborador_matricula != '${matricula}') and criador.matricula != '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome, criador.setor_nome order by crm.id;`,
     );
   }
 }

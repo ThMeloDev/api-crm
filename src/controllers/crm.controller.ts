@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { concat } from 'rxjs';
+import { Body, Controller, Get, Param, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Crm } from 'src/database/entities/crm.entity';
 import { CrmService } from 'src/services/crm.service';
 
@@ -58,8 +58,10 @@ export class CrmController {
 
   
   @Post('updateCrm')
-  async updateCrm(@Body() data): Promise<any>{
-    return await this.crmService.updateCrm(data);
+  @UseInterceptors(FileInterceptor('documentos'))
+  async updateCrm(@Body() data, @UploadedFiles() files ){
+    console.log(files)
+    //return await this.crmService.updateCrm(data);
   }
 
   @Post('reject')
@@ -75,6 +77,11 @@ export class CrmController {
   @Get('maxVersion')
   async maxVersion(@Query() params): Promise<any>{
     return await this.crmService.maxVersion(params.id);
+  } 
+
+  @Get('allCrm')
+  async getAllCrms(@Query() params): Promise<Crm[]>{
+    return await this.crmService.getAllCrms(params.id);
   } 
  
 }
