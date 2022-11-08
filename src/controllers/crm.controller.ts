@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { storage } from 'src/config/multer';
 import { Crm } from 'src/database/entities/crm.entity';
 import { CrmService } from 'src/services/crm.service';
 
@@ -52,16 +53,16 @@ export class CrmController {
   }
 
   @Post('create')
-  async createCrm(@Body() data): Promise<any>{
-    return await this.crmService.createCrm(data);
+  @UseInterceptors(FilesInterceptor('documentos',20, {storage:storage}))
+  async createCrm(@Body() data, @UploadedFiles() files: Array<Express.Multer.File>): Promise<any>{
+    return await this.crmService.createCrm(data,files);
   }
 
   
   @Post('updateCrm')
-  @UseInterceptors(FileInterceptor('documentos'))
-  async updateCrm(@Body() data, @UploadedFiles() files ){
-    console.log(files)
-    //return await this.crmService.updateCrm(data);
+  @UseInterceptors(FilesInterceptor('documentos',20, {storage:storage}))
+  async updateCrm(@Body() data, @UploadedFiles() files: Array<Express.Multer.File> ){   
+    return await this.crmService.updateCrm(data,files);
   }
 
   @Post('reject')

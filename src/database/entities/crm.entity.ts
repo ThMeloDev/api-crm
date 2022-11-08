@@ -6,10 +6,8 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryColumn,
-  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Colaborador } from './colaborador.entity';
-import { Complexidade } from './complexidade.entity';
 import { Documento } from './documento.entity';
 import { SetorEnvolvido } from './setorEnvolvido.entity';
 import { SistemaEnvolvido } from './sistemaEnvolvido.entity';
@@ -31,7 +29,6 @@ export interface CrmProps {
   comportamentoOffline?: string;
   motivoAtualizacao?: string;
   colaboradorCriador: Colaborador;
-  complexidade?: Complexidade;
   setoresEnvolvidos: SetorEnvolvido[];
   sistemasEnvolvidos?: SistemaEnvolvido[];
   documentos?: Documento[];
@@ -91,9 +88,8 @@ export class Crm implements CrmProps {
   })
   colaboradorCriador: Colaborador;
 
-  @ManyToOne(() => Complexidade, (complexidade) => complexidade.crms)
-  @JoinColumn({ name: 'complexidade_nome', referencedColumnName: 'nome' })
-  complexidade: Complexidade;
+  @Column({type:'varchar',length:45,name: 'complexidade'})
+  complexidade: string;
 
   @OneToMany(() => SetorEnvolvido, (setorEnvolvido) => setorEnvolvido.crm, {
     cascade: true,
@@ -107,7 +103,9 @@ export class Crm implements CrmProps {
   )
   sistemasEnvolvidos: SistemaEnvolvido[];
 
-  @OneToMany(() => Documento, (documento) => documento.crm)
+  @OneToMany(() => Documento, (documento) => documento.crm,{
+    cascade: true,
+  })
   documentos: Documento[];
 
   setProps(props: CrmProps): Crm {

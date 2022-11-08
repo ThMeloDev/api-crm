@@ -44,6 +44,7 @@ export class CrmService {
         justificativa: true,
         motivoAtualizacao: true,
         comportamentoOffline: true,
+        complexidade:true,
         colaboradorCriador: {
           matricula: true,
         },
@@ -55,6 +56,7 @@ export class CrmService {
         },
         sistemasEnvolvidos: { nomeSistema: true },
         alternativas: true,
+        documentos: { pathDocumento: true },
       },
       where: {
         id: id,
@@ -64,50 +66,50 @@ export class CrmService {
         colaboradorCriador: { setor: true },
         setoresEnvolvidos: true,
         sistemasEnvolvidos: true,
+        documentos: true,
       },
     });
   }
 
   async getAllCrms(crmId: number): Promise<Crm[]> {
-    return await this.crmReposity
-      .find({
-        select: {
-          id: true,
-          versao: true,
+    return await this.crmReposity.find({
+      select: {
+        id: true,
+        versao: true,
+        nome: true,
+        necessidade: true,
+        objetivo: true,
+        descricao: true,
+        dataAbertura: true,
+        dataFechamento: true,
+        dataLegal: true,
+        impacto: true,
+        impactoMudanca: true,
+        justificativa: true,
+        motivoAtualizacao: true,
+        comportamentoOffline: true,
+        colaboradorCriador: {
           nome: true,
-          necessidade: true,
-          objetivo: true,
-          descricao: true,
-          dataAbertura: true,
-          dataFechamento: true,
-          dataLegal: true,
-          impacto: true,
-          impactoMudanca: true,
+          sobrenome: true,
+        },
+        setoresEnvolvidos: {
+          nomeSetor: true,
+          flag: true,
           justificativa: true,
-          motivoAtualizacao: true,
-          comportamentoOffline: true,
-          colaboradorCriador: {
-            nome:true,
-            sobrenome:true
-          },
-          setoresEnvolvidos: {
-            nomeSetor: true,
-            flag: true,
-            justificativa: true,
-            matriculaColaborador: true,
-          },
-          sistemasEnvolvidos: { nomeSistema: true },
-          alternativas: true,
+          matriculaColaborador: true,
         },
-        where: {
-          id: crmId,
-        },
-        relations: {
-          colaboradorCriador: { setor: true },
-          setoresEnvolvidos: true,
-          sistemasEnvolvidos: true,
-        },
-      })
+        sistemasEnvolvidos: { nomeSistema: true },
+        alternativas: true,
+      },
+      where: {
+        id: crmId,
+      },
+      relations: {
+        colaboradorCriador: { setor: true },
+        setoresEnvolvidos: true,
+        sistemasEnvolvidos: true,
+      },
+    });
   }
 
   async maxVersion(crmId): Promise<Crm> {
@@ -124,7 +126,9 @@ export class CrmService {
     );
   }
 
-  async createCrm(data: any): Promise<any> {
+  async createCrm( data: any, files: Array<Express.Multer.File> ): Promise<any> {
+    if (data.dataLegal == 'undefined' || data.dataLegal == 'null')
+      data.dataLegal = null;
     try {
       if (data.id != null || data.id != undefined) {
         const newCrm = await this.maxVersion(data.id);
@@ -138,12 +142,12 @@ export class CrmService {
         }
         data.versao = 1;
       }
-      
+
       let crm = new Crm().setProps({
         id: data.id,
         versao: data.versao,
         alternativas: data.alternativas,
-        colaboradorCriador: data.colaboradorCriador,
+        colaboradorCriador: JSON.parse(data.colaboradorCriador),
         comportamentoOffline: data.comportamentoOffline,
         dataAbertura: data.dataAbertura,
         dataLegal: data.dataLegal,
@@ -155,33 +159,75 @@ export class CrmService {
         objetivo: data.objetivo,
         setoresEnvolvidos: [],
         sistemasEnvolvidos: [],
+        documentos: [],
       });
-
-      for (const nomeSetorEnvolvido of data.setoresEnvolvidos) {
-        const setor = await this.setorService.findOne(nomeSetorEnvolvido);
-        const setorEnvolvido = new SetorEnvolvido().setProps({
-          crmId: crm.id,
-          crmVersao: crm.versao,
-          nomeSetor: setor.nome,
-          crm: crm,
-          flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
-          justificativa: null,
-          setor: setor,
-        });
-        crm.setoresEnvolvidos.push(setorEnvolvido);
+      console.log(data)
+      if(Array.isArray(data.setoresEnvolvidos)){
+        for (const nomeSetorEnvolvido of data.setoresEnvolvidos) {
+          const setor = await this.setorService.findOne(nomeSetorEnvolvido);
+          const setorEnvolvido = new SetorEnvolvido().setProps({
+            crmId: crm.id,
+            crmVersao: crm.versao,
+            nomeSetor: setor.nome,
+            crm: crm,
+            flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
+            justificativa: null,
+            setor: setor,
+          });
+          crm.setoresEnvolvidos.push(setorEnvolvido);
+        }
+      }else if(!!data.setoresEnvolvidos){
+        for (const nomeSetorEnvolvido of Array(data.setoresEnvolvidos)) {
+          const setor = await this.setorService.findOne(nomeSetorEnvolvido);
+          const setorEnvolvido = new SetorEnvolvido().setProps({
+            crmId: crm.id,
+            crmVersao: crm.versao,
+            nomeSetor: setor.nome,
+            crm: crm,
+            flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
+            justificativa: null,
+            setor: setor,
+          });
+          crm.setoresEnvolvidos.push(setorEnvolvido);
+        }
+      }
+      
+      if(Array.isArray(data.sistemasEnvolvidos)){
+        for (const nomeSistemaEnvolvido of data.sistemasEnvolvidos) {
+          const sistema = await this.sistemaService.findOne(nomeSistemaEnvolvido);
+          const sistemaEnvolvido = new SistemaEnvolvido().setProps({
+            crmId: crm.id,
+            crmVersao: crm.versao,
+            nomeSistema: sistema.nome,
+            crm: crm,
+            sistema: sistema,
+          });
+          crm.sistemasEnvolvidos.push(sistemaEnvolvido);
+        }
+      }else if(!!data.sistemasEnvolvidos){
+        for (const nomeSistemaEnvolvido of Array(data.sistemasEnvolvidos)) {
+          const sistema = await this.sistemaService.findOne(nomeSistemaEnvolvido);
+          const sistemaEnvolvido = new SistemaEnvolvido().setProps({
+            crmId: crm.id,
+            crmVersao: crm.versao,
+            nomeSistema: sistema.nome,
+            crm: crm,
+            sistema: sistema,
+          });
+          crm.sistemasEnvolvidos.push(sistemaEnvolvido);
+        }
       }
 
-      for (const nomeSistemaEnvolvido of data.sistemasEnvolvidos) {
-        const sistema = await this.sistemaService.findOne(nomeSistemaEnvolvido);
-        const sistemaEnvolvido = new SistemaEnvolvido().setProps({
-          crmId: crm.id,
-          crmVersao: crm.versao,
-          nomeSistema: sistema.nome,
+      for (const file of files) {
+        const doc = new Documento().setProps({
+          crm_id: crm.id,
+          crm_versao: crm.versao,
+          pathDocumento: file.path,
           crm: crm,
-          sistema: sistema,
         });
-        crm.sistemasEnvolvidos.push(sistemaEnvolvido);
+        crm.documentos.push(doc);
       }
+      
       await this.crmReposity.save(crm);
       return { message: 'SUCESSO' };
     } catch (error) {
@@ -190,15 +236,17 @@ export class CrmService {
     }
   }
 
-  async updateCrm(data: any): Promise<any> {
+  async updateCrm(data: any, files: Array<Express.Multer.File>): Promise<any> {
+    if (data.dataLegal == 'undefined' || data.dataLegal == 'null')
+      data.dataLegal = null;
     try {
-      data.versao = data.versao + 1;
+      data.versao = Number(data.versao) + 1;
       let crm = new Crm().setProps({
-        id: data.id,
+        id: Number(data.id),
         versao: data.versao,
         nome: data.nome,
         alternativas: data.alternativas,
-        colaboradorCriador: data.colaboradorCriador,
+        colaboradorCriador: JSON.parse(data.colaboradorCriador),
         comportamentoOffline: data.comportamentoOffline,
         dataAbertura: data.dataAbertura,
         dataLegal: data.dataLegal,
@@ -209,54 +257,152 @@ export class CrmService {
         objetivo: data.objetivo,
         setoresEnvolvidos: [],
         sistemasEnvolvidos: [],
+        documentos: [],
       });
-
-      for (const sectorInvolved of data.setoresEnvolvidos) {
-        
-        if (sectorInvolved.nomeSetor != undefined) {
-          console.log(`setorEnvolvidoNotUndefined: ${sectorInvolved.nomeSetor}`)
-          const setor = await this.setorService.findOne(
-            sectorInvolved.nomeSetor
-          );
-          const setorEnvolvido = new SetorEnvolvido().setProps({
-            crmId: crm.id,
-            crmVersao: crm.versao,
-            nomeSetor: setor.nome,
-            crm: crm,
-            flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
-            justificativa: '',
-            setor: setor,
-          });
-          crm.setoresEnvolvidos.push(setorEnvolvido);
-        } else {
-          const setor = await this.setorService.findOne(sectorInvolved);
-          const setorEnvolvido = new SetorEnvolvido().setProps({
-            crmId: crm.id,
-            crmVersao: crm.versao,
-            nomeSetor: setor.nome,
-            crm: crm,
-            flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
-            justificativa: '',
-            setor: setor,
-          });
-          crm.setoresEnvolvidos.push(setorEnvolvido);
+      console.log(data)
+      if(Array.isArray(data.setoresEnvolvidos)){
+        for (let sectorInvolved of data.setoresEnvolvidos) {
+          sectorInvolved = JSON.parse(sectorInvolved)
+          if (sectorInvolved.nomeSetor != undefined) {
+            const setor = await this.setorService.findOne(
+              sectorInvolved.nomeSetor,
+            );
+            const setorEnvolvido = new SetorEnvolvido().setProps({
+              crmId: crm.id,
+              crmVersao: crm.versao,
+              nomeSetor: setor.nome,
+              crm: crm,
+              flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
+              justificativa: '',
+              setor: setor,
+            });
+            crm.setoresEnvolvidos.push(setorEnvolvido);
+          } else {
+            const setor = await this.setorService.findOne(sectorInvolved);
+            const setorEnvolvido = new SetorEnvolvido().setProps({
+              crmId: crm.id,
+              crmVersao: crm.versao,
+              nomeSetor: setor.nome,
+              crm: crm,
+              flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
+              justificativa: '',
+              setor: setor,
+            });
+            crm.setoresEnvolvidos.push(setorEnvolvido);
+          }
+        }
+      }else{
+        for (let sectorInvolved of Array(data.setoresEnvolvidos)) {
+          sectorInvolved = JSON.parse(sectorInvolved)
+          if (sectorInvolved.nomeSetor != undefined) {
+            const setor = await this.setorService.findOne(
+              sectorInvolved.nomeSetor,
+            );
+            const setorEnvolvido = new SetorEnvolvido().setProps({
+              crmId: crm.id,
+              crmVersao: crm.versao,
+              nomeSetor: setor.nome,
+              crm: crm,
+              flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
+              justificativa: '',
+              setor: setor,
+            });
+            crm.setoresEnvolvidos.push(setorEnvolvido);
+          } else {
+            const setor = await this.setorService.findOne(sectorInvolved);
+            const setorEnvolvido = new SetorEnvolvido().setProps({
+              crmId: crm.id,
+              crmVersao: crm.versao,
+              nomeSetor: setor.nome,
+              crm: crm,
+              flag: FLAGS_SETORES_ENVOLVIDOS.PENDENTE,
+              justificativa: '',
+              setor: setor,
+            });
+            crm.setoresEnvolvidos.push(setorEnvolvido);
+          }
         }
       }
-
-      for (const system of data.sistemasEnvolvidos) {
-        const sistema = await this.sistemaService.findOne(system.nomeSistema);
-        const sistemaEnvolvido = new SistemaEnvolvido().setProps({
-          crmId: crm.id,
-          crmVersao: crm.versao,
-          nomeSistema: sistema.nome,
-          crm: crm,
-          sistema: sistema,
-        });
-        crm.sistemasEnvolvidos.push(sistemaEnvolvido);
+      
+      if(Array.isArray(data.sistemasEnvolvidos)){
+        for (let system of data.sistemasEnvolvidos) {
+          system = JSON.parse(system)
+          if (system.nomeSistema != undefined) {
+            const sistema = await this.sistemaService.findOne(system.nomeSistema);
+            const sistemaEnvolvido = new SistemaEnvolvido().setProps({
+              crmId: crm.id,
+              crmVersao: crm.versao,
+              nomeSistema: sistema.nome,
+              crm: crm,
+              sistema: sistema,
+            });
+            crm.sistemasEnvolvidos.push(sistemaEnvolvido);
+          } else {
+            const sistema = await this.sistemaService.findOne(system);
+            const sistemaEnvolvido = new SistemaEnvolvido().setProps({
+              crmId: crm.id,
+              crmVersao: crm.versao,
+              nomeSistema: sistema.nome,
+              crm: crm,
+              sistema: sistema,
+            });
+            crm.sistemasEnvolvidos.push(sistemaEnvolvido);
+          }
+        }
+      }else if(data.sistemasEnvolvidos != undefined){
+        for (let system of Array(data.sistemasEnvolvidos)) {
+          console.log(system)
+          system = JSON.parse(system)
+          if (system.nomeSistema != undefined) {
+            const sistema = await this.sistemaService.findOne(system.nomeSistema);
+            const sistemaEnvolvido = new SistemaEnvolvido().setProps({
+              crmId: crm.id,
+              crmVersao: crm.versao,
+              nomeSistema: sistema.nome,
+              crm: crm,
+              sistema: sistema,
+            });
+            crm.sistemasEnvolvidos.push(sistemaEnvolvido);
+          } else {
+            const sistema = await this.sistemaService.findOne(system);
+            const sistemaEnvolvido = new SistemaEnvolvido().setProps({
+              crmId: crm.id,
+              crmVersao: crm.versao,
+              nomeSistema: sistema.nome,
+              crm: crm,
+              sistema: sistema,
+            });
+            crm.sistemasEnvolvidos.push(sistemaEnvolvido);
+          }
+        }
       }
+      
+
+      for (const file of files) {
+        const doc = new Documento().setProps({
+          crm_id: crm.id,
+          crm_versao: crm.versao,
+          pathDocumento: file.path,
+          crm: crm,
+        });
+        crm.documentos.push(doc);
+      }
+      if(data.documentosComPath != undefined){
+        for (let documento of data.documentosComPath) {
+          documento = JSON.parse(documento)
+          const doc = new Documento().setProps({
+            crm_id: crm.id,
+            crm_versao: crm.versao,
+            pathDocumento: documento.pathDocumento,
+            crm: crm,
+          });
+          crm.documentos.push(doc);
+        }
+      }
+      
       await this.crmReposity.save(crm);
       return { message: 'SUCESSO' };
-    } catch (error) { 
+    } catch (error) {
       console.log(error);
       return { message: 'ERROR' };
     }
@@ -276,14 +422,13 @@ export class CrmService {
 
   async approveCrm(data: any): Promise<any> {
     try {
-      
-      if(data.setorEnvolvido.nomeSetor != 'TI'){
+      if (data.setorEnvolvido.nomeSetor != 'TI') {
         const crmApproved = await this.crmReposity.query(
           `update setor_envolvido set flag_nome= '${data.setorEnvolvido.flag}', colaborador_matricula= '${data.setorEnvolvido.matriculaColaborador}' where crm_id=${data.id} and crm_versao=${data.versao} and setor_nome='${data.setorEnvolvido.nomeSetor}'`,
         );
-      }else{
+      } else {
         const crmApproved = await this.crmReposity.query(
-          `begin transaction;update setor_envolvido set flag_nome= '${data.setorEnvolvido.flag}', colaborador_matricula= '${data.setorEnvolvido.matriculaColaborador}' where crm_id=${data.id} and crm_versao=${data.versao} and setor_nome='${data.setorEnvolvido.nomeSetor}';update crm set complexidade_nome = '${data.complexidade}', impactoMudanca = '${data.impactoMudanca}';commit;`,
+          `begin transaction;update setor_envolvido set flag_nome= '${data.setorEnvolvido.flag}', colaborador_matricula= '${data.setorEnvolvido.matriculaColaborador}' where crm_id=${data.id} and crm_versao=${data.versao} and setor_nome='${data.setorEnvolvido.nomeSetor}';update crm set complexidade = '${data.complexidade}', "impactoMudanca" = '${data.impactoMudanca}';commit;`,
         );
       }
       return { message: 'SUCESSO' };
@@ -344,7 +489,7 @@ export class CrmService {
   //CRMs aprovadas que o usuario nao criou e esta envolvido
   async listApprovedCrm2(matricula: string): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and exists (select * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.colaborador_matricula = '${matricula}') and criador.matricula = '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome, criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and exists (select * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.colaborador_matricula = '${matricula}') and criador.matricula != '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome, criador.setor_nome order by crm.id;`,
     );
   }
 
