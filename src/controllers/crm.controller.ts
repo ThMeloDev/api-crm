@@ -43,6 +43,7 @@ export class CrmController {
   async listApprovedCrm(@Query() params): Promise<any>{
     //CRMs aprovadas que o usuario criou
     const listCrmUserCreated= await this.crmService.listApprovedCrm1(params.matricula)
+    console.log(listCrmUserCreated)
     //CRMs pendentes que o usuario nao criou e o setor esta envolvido
     const listCrmUserNotCreatedAndSectorInvolved = await this.crmService.listApprovedCrm2(params.matricula)
     //CRMs pendentes que o usuario nao criou nem o setor esta envolvido

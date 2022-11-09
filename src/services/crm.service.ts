@@ -161,7 +161,6 @@ export class CrmService {
         sistemasEnvolvidos: [],
         documentos: [],
       });
-      console.log(data)
       if(Array.isArray(data.setoresEnvolvidos)){
         for (const nomeSetorEnvolvido of data.setoresEnvolvidos) {
           const setor = await this.setorService.findOne(nomeSetorEnvolvido);
@@ -259,7 +258,7 @@ export class CrmService {
         sistemasEnvolvidos: [],
         documentos: [],
       });
-      console.log(data)
+      
       if(Array.isArray(data.setoresEnvolvidos)){
         for (let sectorInvolved of data.setoresEnvolvidos) {
           sectorInvolved = JSON.parse(sectorInvolved)
@@ -351,7 +350,6 @@ export class CrmService {
         }
       }else if(data.sistemasEnvolvidos != undefined){
         for (let system of Array(data.sistemasEnvolvidos)) {
-          console.log(system)
           system = JSON.parse(system)
           if (system.nomeSistema != undefined) {
             const sistema = await this.sistemaService.findOne(system.nomeSistema);
@@ -387,8 +385,19 @@ export class CrmService {
         });
         crm.documentos.push(doc);
       }
-      if(data.documentosComPath != undefined){
+      if(Array.isArray(data.documentosComPath)){
         for (let documento of data.documentosComPath) {
+          documento = JSON.parse(documento)
+          const doc = new Documento().setProps({
+            crm_id: crm.id,
+            crm_versao: crm.versao,
+            pathDocumento: documento.pathDocumento,
+            crm: crm,
+          });
+          crm.documentos.push(doc);
+        }
+      }else if(data.documentosComPath != undefined){
+        for (let documento of Array(data.documentosComPath)) {
           documento = JSON.parse(documento)
           const doc = new Documento().setProps({
             crm_id: crm.id,
@@ -496,7 +505,7 @@ export class CrmService {
   //CRMs aprovadas que o usuario nao criou e nao esta envolvido
   async listApprovedCrm3(matricula: string): Promise<Crm[] | undefined> {
     return await this.crmReposity.query(
-      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and exists (select * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.colaborador_matricula != '${matricula}') and criador.matricula != '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome, criador.setor_nome order by crm.id;`,
+      `SELECT crm.id AS id,crm.versao AS versao,crm.nome AS nome, crm."dataAbertura" as dataAbertura, crm."dataFechamento" as dataFechamento, criador.setor_nome || ' - ' || criador.nome || ' ' || criador.sobrenome  AS criador, (select array_agg(se3.setor_nome || ' - ' || c.nome || ' ' || c.sobrenome ) as setores from setor_envolvido se3 join colaborador c on (se3.colaborador_matricula = c.matricula) where se3.crm_id = crm.id and se3.crm_versao = crm.versao and se3.flag_nome = 'aprovado') FROM crm join colaborador criador on (criador.matricula = crm.colaborador_matricula_criador) join setor_envolvido se on (crm.id = se.crm_id and crm.versao = se.crm_versao) where crm.versao = (SELECT MAX(crm2.versao) FROM crm crm2 WHERE crm2.id = crm.id GROUP BY crm.id) and not exists (select * from setor_envolvido se2  where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.flag_nome in('pendente','rejeitado')) and not exists (select * from setor_envolvido se2 where se2.crm_id = crm.id and se2.crm_versao = crm.versao and se2.colaborador_matricula = '${matricula}') and criador.matricula != '${matricula}' group by crm.id, crm.versao, criador.nome, criador.sobrenome, criador.setor_nome order by crm.id;`,
     );
   }
 }
