@@ -27,7 +27,7 @@ export interface CrmProps {
   dataLegal?: Date;
   impactoMudanca?: string;
   comportamentoOffline?: string;
-  motivoAtualizacao?: string;
+  desenvolvimentoDependente?:string;
   colaboradorCriador: Colaborador;
   setoresEnvolvidos: SetorEnvolvido[];
   sistemasEnvolvidos?: SistemaEnvolvido[];
@@ -77,9 +77,12 @@ export class Crm implements CrmProps {
 
   @Column({ type: 'text', name: 'comportamentoOffline', nullable: true })
   comportamentoOffline: string;
+  
+  @Column({type:'varchar',length:45,name: 'complexidade'})
+  complexidade: string;
 
-  @Column({ type: 'text', name: 'motivoAtualizacao', nullable: true })
-  motivoAtualizacao: string;
+  @Column({type:'varchar',length:200,name:'desenvolvimentoDependente'})
+  desenvolvimentoDependente: string;
 
   @ManyToOne(() => Colaborador, (colaborador) => colaborador.crms)
   @JoinColumn({
@@ -87,9 +90,6 @@ export class Crm implements CrmProps {
     referencedColumnName: 'matricula',
   })
   colaboradorCriador: Colaborador;
-
-  @Column({type:'varchar',length:45,name: 'complexidade'})
-  complexidade: string;
 
   @OneToMany(() => SetorEnvolvido, (setorEnvolvido) => setorEnvolvido.crm, {
     cascade: true,
